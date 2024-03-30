@@ -1,0 +1,86 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url = "http://files.minecraftforge.net/maven" }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+version = "0.4.6"
+def env = System.getenv()
+if (env.BUILD_NUMBER) {
+    version = version + "-" + "${env.BUILD_NUMBER}"
+}
+
+group = "refinedstorageaddons"
+archivesBaseName = "refinedstorageaddons"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+minecraft {
+    version = "1.12.2-14.23.4.2703"
+    runDir = "run"
+    useDepAts = true
+    mappings = "snapshot_20180714"
+
+    replaceIn "RSAddons.java"
+    replace "@version@", project.version
+}
+
+repositories {
+    maven {
+        url "PATH/TO/jars/"
+    }
+}
+
+dependencies {
+    deobfCompile "refinedstorage:refinedstorage:1.6.14"
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        expand 'version': project.version, 'mcversion': project.minecraft.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+jar {
+    include "com/raoulvdberge/refinedstorageaddons/**"
+    include "assets/**"
+    include "mcmod.info"
+    include "pack.mcmeta"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.group
+            artifactId = project.archivesBaseName
+            version = project.version
+            artifact sourceJar
+            artifact jar
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            url "/var/www/repo"
+        }
+    }
+}
